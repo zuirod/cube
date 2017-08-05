@@ -4,6 +4,7 @@ from random import randint
 
 class Cube(object):
     FACES = (FRONT, BACK, LEFT, RIGHT, UP, DOWN) = ('f','b','l','r','u','d')
+    # ansi escape color codes
     COLORS = {
         'b': u'\u001b[38;5;33mb\u001b[0m',
         'r': u'\u001b[38;5;9mr\u001b[0m',
@@ -11,6 +12,7 @@ class Cube(object):
         'o': u'\u001b[38;5;208mo\u001b[0m',
         'y': u'\u001b[38;5;11my\u001b[0m',
     }
+    # rubik's cube notation definitions
     TURN = re.compile(r"(\d*)([fblrud])('?)(\d*)", re.I)
     ROTATION = re.compile(r"([xyz])('?)(\d*)", re.I)
     ACTION = re.compile(r"(?:\d*[fblrud]'?\d*)|(?:[xyz]'?\d*)", re.I)
@@ -18,6 +20,7 @@ class Cube(object):
     def __init__(self, size, f='w', b='y', l='b', r='g', u='r', d='o'):
         self.size = size
         self.colors = (f, b , l , r , u, d)
+        # one matrix of "stickers" for each face
         self.cube = dict(zip(
             Cube.FACES,
             [[(color,)*size]*size for color in self.colors],
@@ -54,6 +57,7 @@ class Cube(object):
         return cube
 
     def x(self, cc=False):
+        """Rotation about the x-axis."""
         f = self.cube[Cube.FRONT]
         u = self.cube[Cube.UP]
         b = self.cube[Cube.BACK]
@@ -74,6 +78,7 @@ class Cube(object):
             self.cube[Cube.DOWN] = [row[::-1] for row in reversed(b)]
 
     def y(self, cc=False):
+        """Rotation about the y-axis."""
         l = self.cube[Cube.LEFT]
         b = self.cube[Cube.BACK]
         r = self.cube[Cube.RIGHT]
@@ -94,6 +99,7 @@ class Cube(object):
             self.cube[Cube.FRONT] = r
 
     def z(self, cc=False):
+        """Rotation about the z-axis."""
         l = self.cube[Cube.LEFT]
         u = self.cube[Cube.UP]
         r = self.cube[Cube.RIGHT]
@@ -114,9 +120,11 @@ class Cube(object):
             self.cube[Cube.DOWN] = zip(*reversed(r))
 
     def rotate(self, axis, cc=False):
+        """Rotation about the given axis."""
         getattr(self, axis.lower())(cc)
     
     def f(self, cc=False, layers=1):
+        """Turn the front face 90 degrees."""
         if not (0 < layers <= self.size):
             return
         if layers == self.size:
@@ -126,6 +134,7 @@ class Cube(object):
         self.x(True)
     
     def b(self, cc=False, layers=1):
+        """Turn the back face 90 degrees."""
         if not (0 < layers <= self.size):
             return
         if layers == self.size:
@@ -135,6 +144,7 @@ class Cube(object):
         self.x()
     
     def l(self, cc=False, layers=1):
+        """Turn the left face 90 degrees."""
         if not (0 < layers <= self.size):
             return
         if layers == self.size:
@@ -144,6 +154,7 @@ class Cube(object):
         self.z(True)
     
     def r(self, cc=False, layers=1):
+        """Turn the right face 90 degrees."""
         if not (0 < layers <= self.size):
             return
         if layers == self.size:
@@ -153,6 +164,7 @@ class Cube(object):
         self.z()
     
     def u(self, cc=False, layers=1):
+        """Turn the up face 90 degrees."""
         if not (0 < layers <= self.size):
             return
         if layers == self.size:
@@ -175,6 +187,7 @@ class Cube(object):
             self.cube[Cube.FRONT][:layers] = r
     
     def d(self, cc=False, layers=1):
+        """Turn the down face 90 degrees."""
         if not (0 < layers <= self.size):
             return
         if layers == self.size:
@@ -197,9 +210,13 @@ class Cube(object):
             self.cube[Cube.BACK][-layers:] = r
 
     def turn(self, face, cc=False, layers=1):
+        """Turn the given face 90 degrees."""
         getattr(self, face.lower())(cc, layers)
+        if face != face.lower():
+            getattr(self, face.lower())(not cc, layers - 1)
 
     def do(self, action):
+        """Perform the given action on the cube."""
         turn = Cube.TURN.match(action)
         if turn:
             layers, face, cc, times = turn.groups()
@@ -216,9 +233,11 @@ class Cube(object):
                     self.rotate(axis, cc)
 
     def run(self, algorithm):
+        """Perform a series of actions on the cube."""
         map(self.do, Cube.ACTION.findall(algorithm))
         
     def scramble(self):
+        """Perform a series of random actions on the cube."""
         faces = self.cube.keys()
         for i in xrange(12*self.size):
             self.turn(faces[randint(0,5)], randint(0,1), randint(1,self.size))
